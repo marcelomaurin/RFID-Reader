@@ -1,11 +1,11 @@
 # RFID-Reader
 
-##Portuguese:
+Portuguese:
 Leitor RFID 
 
 Este leitor permite ler qualquer leitor Mifare 13,56MHZ. Simulando a digitação do seu UID em Decimal.
 
-###Exigencias:
+Exigencias:
 Arduino Leonardo.
 - Arduino Leonardo.
 - RFID-RC522
@@ -18,14 +18,19 @@ pin10                RST
 PIN4(GND)             - 
 
 
-##English
+English
 RFID reader
 
 This reader allows reading any Mifare 13.56MHZ reader. Simulating typing your UID in Decimal.
 
-###Requirements:
+Requirements:
 - Arduino Leonardo.
 - RFID-RC522
  
 
-PINOUT:
+PINOUT :
+ARDUINO    <--->   RC522
+3.5v                 3.5v
+GND                  GND
+pin10                RST
+PIN4(GND)             - 
