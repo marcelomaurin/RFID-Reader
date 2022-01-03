@@ -17,6 +17,8 @@ GND                  GND
 pin10                RST
 PIN4(GND)             - 
 
+<A HREF="https://github.com/marcelomaurin/RFID-Reader/blob/main/rfid%20reader/leitor.jpeg">PINOUT imagem</A>
+
 
 English
 RFID reader
@@ -34,3 +36,5 @@ ARDUINO    <--->   RC522
 GND                  GND
 pin10                RST
 PIN4(GND)             - 
+
+<A HREF="https://github.com/marcelomaurin/RFID-Reader/blob/main/rfid%20reader/leitor.jpeg">PINOUT image</A>
