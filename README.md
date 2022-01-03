@@ -17,6 +17,8 @@ GND                  GND
 pin10                RST
 PIN4(GND)             - 
 
+<img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/PINOUT.jpg">
+
 <img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
 
 
@@ -36,5 +38,7 @@ ARDUINO    <--->   RC522
 GND                  GND
 pin10                RST
 PIN4(GND)             - 
+
+<img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/PINOUT.jpg">
 
 <img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
