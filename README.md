@@ -17,7 +17,7 @@ GND                  GND
 pin10                RST
 PIN4(GND)             - 
 
-<img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/rfid%20reader/leitor.jpeg">
+<img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
 
 
 English
@@ -37,4 +37,4 @@ GND                  GND
 pin10                RST
 PIN4(GND)             - 
 
-<img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/rfid%20reader/leitor.jpeg">
+<img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
