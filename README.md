@@ -10,6 +10,10 @@ Arduino Leonardo.
 - Arduino Leonardo.
 - RFID-RC522
 
+Documentação:
+http://maurinsoft.com.br/index.php/projeto-leitor-rfid/
+
+
 PINOUT :
 ARDUINO    <--->   RC522
 3.5v                 3.5v
@@ -30,7 +34,9 @@ This reader allows reading any Mifare 13.56MHZ reader. Simulating typing your UI
 Requirements:
 - Arduino Leonardo.
 - RFID-RC522
- 
+
+Documentation
+http://maurinsoft.com.br/index.php/projeto-leitor-rfid/
 
 PINOUT :
 ARDUINO    <--->   RC522
