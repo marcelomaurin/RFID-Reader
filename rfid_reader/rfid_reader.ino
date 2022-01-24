@@ -33,6 +33,7 @@
 
 #include <SPI.h>
 #include <MFRC522.h>
+#include <stdlib.h>
 #include "Keyboard.h"
 
 
@@ -83,15 +84,12 @@ void setup() {
   Serial.println("Iniciando...");
   setup_button();
   delay(5000);
-  // read the pushbutton:
+  Serial.println("Ativou o keyboard!");
+  setup_keyboard();
+   // read the pushbutton:
   buttonState = digitalRead(buttonPin);
-  /*Ativa se o botão não for pressionado*/
-  if(buttonState == LOW) {
-     Serial.println("Ativou o keyboard!");
-     setup_keyboard();
-  } else {
-    Serial.println("Não ativou o keyboard!");
-  }
+  
+  
 }
  
 void loop() {
@@ -148,46 +146,77 @@ void loop() {
  * Helper routine to dump a byte array as hex values to Serial. 
  */
 void printHex(byte *buffer, byte bufferSize) {
+  char hex[] = "0123456789abcdef";
   for (byte i = 0; i < bufferSize; i++) {
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX);
+    /*Ativa se o botão não for pressionado*/
+    if(buttonState != LOW) { 
+        Keyboard.print(buffer[i], HEX);
+    }
   }
+  Serial.println(" ");
+  Keyboard.write(0x10);
+  Keyboard.write(0x13);
+  
+}
+
+long long int strtoll(char *info, char *pos, int base){
+  long long int value = 0;
+  int cont = 0;
+  Serial.println("Iniciou");
+  char info2[10];
+  
+  info2[0] = *info; /*Pega primeiro caracter*/
+  
+  while(info2[0] != '\0'){
+
+    Serial.print("info2:");
+    Serial.println(info2[0]);
+    value = value * base;
+    Serial.print("value:");
+    Serial.println( (char)strtol(info2[0], NULL, base));
+    value = value + strtol(info2[0], NULL, base);
+    cont ++;
+    //memcpy(info2,'\0',sizeof(info2));
+    info2[0] = *(info+cont);
+  } 
+  if (pos!=NULL) {
+    pos = (info + cont); /*Retorna posicao que parou*/
+  }
+  //Serial.print("Passo");
+  //Serial.println(cont);
+  return value; /*Retorna valor*/
 }
 
 /**
  * Helper routine to dump a byte array as dec values to Serial.
  */
 void printDec(byte *buffer, byte bufferSize) {
-  String buffer2 = "";
-  
+  String buffer2;
+  char number2[20];
+  long long int  number;
 
   for (byte i = 0; i < bufferSize; i++) {
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], DEC); 
+    if(buffer[i] < 0x10) {
+      buffer2.concat("0");
+    }
     buffer2.concat(String(buffer[i],HEX));
     
-  }
-  buffer2.toUpperCase();
-  Serial.println("");
-  Serial.print("Hex:");
-  Serial.println(buffer2.c_str());
-  long  number = strtol(buffer2.c_str(),NULL,16);
-
-  Serial.println(number,DEC);
-  
-  Serial.print("Numero:");
-  Serial.println(number);
-  char number2[20];
-  memset(number2,'\0',sizeof(number2));
-  
-  sprintf(number2,"%ld",number);
+  }  
+  //Serial.print("Numero:");
+  //Serial.println(number,DEC);
+      
   /*Ativa se o botão não for pressionado*/
   if(buttonState == LOW) {
-    for (byte i = 0; i < (strlen(number2)); i++) {    
-      Keyboard.write(number2[i]);
-    }
+    
+      //Keyboard.print(number,DEC);
+  
+    Serial.println(" ");
     Keyboard.write(0x10);
     Keyboard.write(0x13);
   }
-  delay(2000);
+  //delay(2000);
 }
