@@ -13,6 +13,8 @@ Arduino Leonardo.
 Documentação:
 http://maurinsoft.com.br/index.php/projeto-leitor-rfid/
 
+Caixa plastica
+https://grabcad.com/library/box-arduino-leonardo-1
 
 PINOUT :
 ARDUINO    <--->   RC522
@@ -37,6 +39,9 @@ Requirements:
 
 Documentation
 http://maurinsoft.com.br/index.php/projeto-leitor-rfid/
+
+Plastic BOX
+https://grabcad.com/library/box-arduino-leonardo-1
 
 PINOUT :
 ARDUINO    <--->   RC522
