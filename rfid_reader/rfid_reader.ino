@@ -189,34 +189,124 @@ long long int strtoll(char *info, char *pos, int base){
   return value; /*Retorna valor*/
 }
 
+int getNum(char ch)
+{
+    int num = 0;
+    if (ch >= '0' && ch <= '9') {
+        num = ch - 0x30;
+    }
+    else {
+        switch (ch) {
+        case 'A':
+        case 'a':
+            num = 10;
+            break;
+        case 'B':
+        case 'b':
+            num = 11;
+            break;
+        case 'C':
+        case 'c':
+            num = 12;
+            break;
+        case 'D':
+        case 'd':
+            num = 13;
+            break;
+        case 'E':
+        case 'e':
+            num = 14;
+            break;
+        case 'F':
+        case 'f':
+            num = 15;
+            break;
+        default:
+            num = 0;
+        }
+    }
+    return num;
+}
+
+
+unsigned  long int getNumber(byte *info, byte tamanho){
+  unsigned long  int acumulador = 0;
+  char parte ;
+  
+  
+  //Serial.print("Tamanho");
+  //Serial.println(tamanho);
+  for( int cont = 0;(cont<tamanho); cont++){
+    parte = (char) *(info+cont);
+    acumulador = acumulador * 0xFF;
+    acumulador = acumulador + ((unsigned long int)parte&0xFF);
+    //Serial.print("Parte:");
+    //Serial.println( (unsigned short int)(parte&0xFF));
+  }
+  Serial.print("final:");
+  //Serial.println(acumulador);
+  
+  //memcpy(acumulador,info,tamanho);
+  //acumulador = ((*info)<<24)+((*(info+1))<<16)+((*(info+2))<<8)+((*(info+3)));
+  //acumulador = (long long int) info;
+  return acumulador;
+}
+
+
+void CharLongLongInt(char *info, unsigned  long int numero){
+  unsigned  long int tempo =0;
+  int resto = 0;
+  tempo = numero;
+  char infoaux[20];
+  
+
+  Serial.println("Partes");
+  do {
+    memset(infoaux,'\0',sizeof(infoaux));    
+    memcpy(infoaux,info,sizeof(infoaux));
+    resto = tempo % 10;
+    Serial.print("Antes:");
+    Serial.println(infoaux);
+    sprintf(info,"%d%s\0",resto,infoaux);
+    tempo = tempo-resto;
+    tempo = tempo/10;    
+    Serial.print("Resto:"); 
+    Serial.println(resto);
+    Serial.print("Info:");
+    Serial.println(info);
+  } while(tempo !=0);  
+  //sprintf(info,"%s",infoaux);
+}
+
 /**
  * Helper routine to dump a byte array as dec values to Serial.
  */
 void printDec(byte *buffer, byte bufferSize) {
   String buffer2;
   char number2[20];
-  long long int  number;
+  unsigned  long int  number;
 
-  for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], DEC); 
-    if(buffer[i] < 0x10) {
-      buffer2.concat("0");
-    }
-    buffer2.concat(String(buffer[i],HEX));
-    
-  }  
+
+  number = getNumber(buffer,bufferSize);
+  if (number!=0){
+    Serial.println("Diferente de zero");
+  }
   //Serial.print("Numero:");
-  //Serial.println(number,DEC);
+  char info[20];
+  memset(info,'\0',sizeof(info));
+  //sprintf(info,"%llu",number);
+  CharLongLongInt(info,number);
+  Serial.print("Nro:");
+  Serial.println(info);
       
   /*Ativa se o botão não for pressionado*/
   if(buttonState == LOW) {
     
       //Keyboard.print(number,DEC);
-  
-    Serial.println(" ");
+    Keyboard.print(info);
     Keyboard.write(0x10);
     Keyboard.write(0x13);
   }
+  Serial.println("Finalizou");
   //delay(2000);
 }
