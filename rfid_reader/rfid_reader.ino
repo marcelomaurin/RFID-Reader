@@ -35,6 +35,17 @@
 #include <MFRC522.h>
 #include <stdlib.h>
 #include "Keyboard.h"
+#include <math.h>
+
+
+#define Version "1.0.2"
+
+#define DefConfig     2
+#define DefNormal     0
+
+#define DevSerial     0
+#define DevBluetooth  1
+#define DevEthernet   2
 
 
 #define SS_PIN 10
@@ -42,6 +53,8 @@
 const int buttonPin = 4;          // input pin for pushbutton
 int previousButtonState = HIGH;   // for checking the state of a pushButton
 int counter = 0;                  // button push counter
+char BufferKeypad[100];
+int nivel = DefNormal;
 
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 MFRC522::MIFARE_Key key; 
@@ -54,6 +67,7 @@ void setup_keyboard(){
   
   // initialize control over the keyboard:
   Keyboard.begin();
+  Serial.println("Keyboard ready!");
 }
 
 void setup_rfid(){
@@ -72,27 +86,111 @@ void setup_rfid(){
 void setup_button(){
   // make the pushButton pin an input:
   pinMode(buttonPin, INPUT);
+  Serial.print("Button is conected in port ");
+  Serial.println(buttonPin);
 }
 
 void setup_serial(){
   Serial.begin(9600);  
 }
 
+
+
+void Wellcome(){
+  Serial.println("RFID Open Hardware");
+  Serial.println("Project site: http://maurinsoft.com.br/index.php/projeto-leitor-rfid/");
+  Serial.print("Version:");
+  Serial.println(Version);
+  Serial.println("Starting firmware...");
+}
+
 void setup() { 
+  
   setup_serial();
+  Wellcome();
   setup_rfid();    
-  Serial.println("Iniciando...");
+  //Serial.println("Iniciando...");
+  
   setup_button();
-  delay(5000);
-  Serial.println("Ativou o keyboard!");
+  //delay(5000);  
   setup_keyboard();
    // read the pushbutton:
-  buttonState = digitalRead(buttonPin);
-  
-  
+  buttonState = digitalRead(buttonPin); 
+  Serial.println("Firmware ready!");
 }
+
+void ManSerial()
+{  
+  Serial.println(" "); 
+  if(nivel==DefConfig){
+    Serial.println("man - manual do equipamento"); 
+    Serial.println("status - status do equipamento");  
+    Serial.println("normal - estado normal do equipamento");     
+  }
+  if(nivel==DefNormal){
+    Serial.println("man - manual do equipamento"); 
+    Serial.println("status - status do equipamento");  
+    Serial.println("config - estado de comando de configuracao"); 
+  }
+}
+
+void Man(byte Dev)
+{
+  if (Dev == DevSerial)
+  {
+    ManSerial();
+  }
+}
+
+
+
+//Status da Serial
+void StatusSerial()
+{
+  
+  Serial.println(" ");
+  
+  Serial.println("Comando Status do Equipamento");
+  Serial.print("Equipamento no modo:");
+  Serial.println((nivel==DefNormal)?"Normal":"Config");
+  Serial.print( "Pino 4:"); 
+  byte value = digitalRead(buttonPin);
+  Serial.println(((value==LOW)?"On":"Off")); 
+   
+  Serial.println(" ");
+}
+
+//Status da Serial
+void Status(byte Dev)
+{
+  if (Dev == DevSerial)
+  {
+    StatusSerial(); 
+  }
  
-void loop() {
+}
+
+
+//Imprime padrão demonstrando entrada de comando
+void ImprimeSerial()
+{
+  //Serial.println(" ");
+  Serial.print("/>"); 
+}
+
+
+
+//Imprime padrão demonstrando entrada de comando
+void Imprime(byte Dev)
+{
+  if (Dev == DevSerial)
+  {
+    ImprimeSerial();
+  }
+}
+
+
+void le_rfid() {
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! rfid.PICC_IsNewCardPresent())
     return;
@@ -139,6 +237,168 @@ void loop() {
 
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
+}
+
+void Wellcome_Normal(){
+  Serial.println("Bem vindo ao modo normal");
+}
+
+void Wellcome_Config(){
+  Serial.println("Bem vindo ao modo config");
+}
+
+
+
+//Comando de entrada do Teclado
+void KeyCMD_Normal(byte Dev)
+{
+  bool resp = false;
+
+  if(BufferKeypad[0] != '\0')
+  {
+    Serial.print("Comando:");
+    Serial.println(BufferKeypad);
+        
+    if (strcmp( BufferKeypad,"config")==0)
+    {
+      nivel = DefConfig;
+      resp = true;
+      //LDC(Produto," ");
+      Wellcome_Config();
+    }
+ 
+  
+    if (strcmp( BufferKeypad,"status")==0)
+    {
+      Serial.println("Status Comando...");
+      Status(Dev);
+      resp = true;        
+    }
+    if (strcmp( BufferKeypad,"man")==0)
+    {    
+      Man(Dev);
+      resp = true;        
+    }
+
+    if (resp==false) 
+    {
+      if( Dev==DevSerial)
+      {       
+        //Serial.println(BufferKeypad);        
+        Serial.println("Comando nao reconhecido!"); 
+        //strcpy(BufferKeypad,'\0');
+        memset(BufferKeypad,0,sizeof(BufferKeypad));
+      }      
+    }
+    else
+    {
+      //strcpy(BufferKeypad,'\0');
+      memset(BufferKeypad,0,sizeof(BufferKeypad));
+    }    
+    Imprime(Dev); 
+  }
+}
+
+
+//Comando de entrada do Teclado
+void KeyCMD_Config(byte Dev)
+{
+  bool resp = false;
+
+  if(BufferKeypad[0] != '\0')
+  {
+    Serial.print("Comando:");
+    Serial.println(BufferKeypad);
+   
+    if (strcmp( BufferKeypad, "normal")==0)
+    {
+      nivel = DefNormal;
+      resp = true;
+      Wellcome_Normal();
+    }
+  
+    if (strcmp( BufferKeypad,"status")==0)
+    {
+      Serial.println("Status Comando...");
+      Status(Dev);
+      resp = true;        
+    }
+    if (strcmp( BufferKeypad,"man")==0)
+    {    
+      Man(Dev);
+      resp = true;        
+    }
+
+    if (resp==false) 
+    {
+      if( Dev==DevSerial)
+      {
+        
+        
+        //Serial.println(BufferKeypad);
+        
+        Serial.println("Comando nao reconhecido!"); 
+        //strcpy(BufferKeypad,'\0');
+        memset(BufferKeypad,0,sizeof(BufferKeypad));
+        
+      }      
+    }
+    else
+    {
+      //strcpy(BufferKeypad,'\0');
+      memset(BufferKeypad,0,sizeof(BufferKeypad));
+    }    
+    Imprime(Dev); 
+  }
+}
+
+//Comando de entrada do Teclado
+void KeyCMD(byte Dev)
+{
+  if(nivel==DefNormal){
+    KeyCMD_Normal(Dev);
+  } 
+  if(nivel==DefConfig){
+    KeyCMD_Config(Dev);
+  }
+}
+
+
+//Le registro do bluetooth
+void Le_Serial()
+{  
+  char key;
+  while(Serial.available()>0) 
+  {
+    key = Serial.read();
+    if(key == '\r')
+    {
+      sprintf(BufferKeypad,"%s",BufferKeypad);
+      Serial.print("Comando digitado:");
+      Serial.println(BufferKeypad);
+      KeyCMD(DevSerial);      
+      break;
+    }
+    else
+    {
+      //BufferKeypad += key;
+      sprintf(BufferKeypad,"%s%c",BufferKeypad,key);
+    }
+  }   
+}
+
+void Leituras()
+{
+  if(nivel==DefNormal){
+    le_rfid();
+  }
+  Le_Serial(); //Le dados do Serial
+}
+ 
+void loop() {
+  Leituras();
+  
+  
 }
 
 
@@ -279,23 +539,44 @@ void CharLongLongInt(char *info, unsigned  long int numero){
 }
 
 /**
+  char hex[] = "0123456789abcdef";
+  for (byte i = 0; i < bufferSize; i++) {
+    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+    Serial.print(buffer[i], HEX);
+    /*Ativa se o botão não for pressionado* /
+    if(buttonState != LOW) { 
+        Keyboard.print(buffer[i], HEX);
+    }
+  }
+  Serial.println(" ");
+  Keyboard.write(0x10);
+  Keyboard.write(0x13);
  * Helper routine to dump a byte array as dec values to Serial.
  */
 void printDec(byte *buffer, byte bufferSize) {
   String buffer2;
   char number2[20];
-  unsigned  long int  number;
+  unsigned long int  number;
 
 
-  number = getNumber(buffer,bufferSize);
+  //number = getNumber(buffer,bufferSize);
+  
+  number = 0;
+  
+  for (byte i = 0; i < bufferSize; i++) {
+     number += buffer[i]*pow(0xFF,((bufferSize-1)-i));     
+  }
+
+  
+  
   if (number!=0){
     Serial.println("Diferente de zero");
   }
   //Serial.print("Numero:");
   char info[20];
   memset(info,'\0',sizeof(info));
-  //sprintf(info,"%llu",number);
-  CharLongLongInt(info,number);
+  sprintf(info,"%lu",number);
+  //CharLongLongInt(info,number);
   Serial.print("Nro:");
   Serial.println(info);
       
