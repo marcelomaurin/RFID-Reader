@@ -35,10 +35,11 @@
 #include <MFRC522.h>
 #include <stdlib.h>
 #include "Keyboard.h"
+#include <EEPROM.h>
 #include <math.h>
 
 
-#define Version "1.0.2"
+#define Version "1.0.3"
 
 #define DefConfig     2
 #define DefNormal     0
@@ -50,9 +51,18 @@
 
 #define SS_PIN 10
 #define RST_PIN 9
-const int buttonPin = 4;          // input pin for pushbutton
-int previousButtonState = HIGH;   // for checking the state of a pushButton
-int counter = 0;                  // button push counter
+
+/*Enderecos de firmware*/
+#define endereco_HEX    0
+#define endereco_DEB    1
+#define endereco_ECHO   2
+#define endereco_SERIAL 3
+#define endereco_KEY    4
+
+
+
+int counter = 0;   
+// button push counter
 char BufferKeypad[100];
 int nivel = DefNormal;
 
@@ -61,13 +71,33 @@ MFRC522::MIFARE_Key key;
 
 // Init array that will store new NUID 
 byte nuidPICC[4];
-int buttonState;
+byte hexmode;
+byte debugmode;
+byte echomode;
+byte serialmode;
+byte keymode;
+
+
+/*Funcao Le parametro Hexadeciamal*/
+int LerENDPARAMKEY(){
+  return EEPROM.read(endereco_KEY);
+}
+
+/*Funcao Grava parametro Hexadeciamal*/
+void GravarENDPARAMKEY(byte value){
+  EEPROM.write(endereco_KEY, value);
+  delay(100);
+  keymode = LerENDPARAMKEY();
+}
+
 
 void setup_keyboard(){
-  
-  // initialize control over the keyboard:
-  Keyboard.begin();
-  Serial.println("Keyboard ready!");
+  keymode = LerENDPARAMKEY();
+  if(keymode!=LOW){
+    // initialize control over the keyboard:
+    Keyboard.begin();
+    Serial.println("Keyboard ready!");
+  }
 }
 
 void setup_rfid(){
@@ -78,20 +108,87 @@ void setup_rfid(){
     key.keyByte[i] = 0xFF;
   }
 
-  Serial.println(F("This code scan the MIFARE Classsic NUID."));
-  Serial.print(F("Using the following key:"));
-  printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+  if(debugmode!=LOW){
+    Serial.println(F("This code scan the MIFARE Classsic NUID."));
+    Serial.print(F("Using the following key:"));
+    printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+  }
 }
 
-void setup_button(){
-  // make the pushButton pin an input:
-  pinMode(buttonPin, INPUT);
-  Serial.print("Button is conected in port ");
-  Serial.println(buttonPin);
+/*Funcao Le parametro Hexadeciamal*/
+int LerENDPARAMECHO(){
+  return EEPROM.read(endereco_ECHO);
+}
+
+/*Funcao Grava parametro Hexadeciamal*/
+void GravarENDPARAMECHO(byte value){
+  EEPROM.write(endereco_ECHO, value);
+  delay(100);
+  echomode = LerENDPARAMDEB();
+}
+
+void setup_echo(){
+  echomode = LerENDPARAMDEB();
+}
+
+
+/*Funcao Le parametro Serial*/
+int LerENDPARAMSERIAL(){
+  return EEPROM.read(endereco_SERIAL);
+}
+
+/*Funcao Grava parametro Serial*/
+void GravarENDPARAMSERIAL(byte value){
+  EEPROM.write(endereco_SERIAL, value);
+  delay(100);
+  serialmode = LerENDPARAMSERIAL();
+}
+
+void setup_serialmode(){
+  serialmode = LerENDPARAMSERIAL();
+}
+
+
+/*Funcao Le parametro Hexadeciamal*/
+int LerENDPARAMDEB(){
+  return EEPROM.read(endereco_DEB);
+}
+
+/*Funcao Grava parametro Hexadeciamal*/
+void GravarENDPARAMDEB(byte value){
+  EEPROM.write(endereco_DEB, value);
+  delay(100);
+  debugmode = LerENDPARAMDEB();
+}
+
+
+void setup_debugmode(){
+  debugmode = LerENDPARAMDEB();
+}
+
+
+
+/*Funcao Le parametro Hexadeciamal*/
+int LerENDPARAMHEX(){
+  return EEPROM.read(endereco_HEX);
+}
+
+/*Funcao Grava parametro Hexadeciamal*/
+void GravarENDPARAMHEX(byte value){
+  EEPROM.write(endereco_HEX, value);
+  delay(100);
+  hexmode = LerENDPARAMHEX();
+}
+
+void Setup_HexValue(){
+
+  // read the pushbutton:
+  hexmode = LerENDPARAMHEX();
 }
 
 void setup_serial(){
   Serial.begin(9600);  
+
 }
 
 
@@ -107,30 +204,43 @@ void Wellcome(){
 void setup() { 
   
   setup_serial();
-  Wellcome();
+  Wellcome();  
+  setup_debugmode();      
   setup_rfid();    
-  //Serial.println("Iniciando...");
-  
-  setup_button();
-  //delay(5000);  
+  Setup_HexValue(); /*Le valor de Hexadecimal*/
   setup_keyboard();
-   // read the pushbutton:
-  buttonState = digitalRead(buttonPin); 
+  setup_echo();
+  setup_serialmode();
+  
+  
   Serial.println("Firmware ready!");
 }
+
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 void ManSerial()
 {  
   Serial.println(" "); 
   if(nivel==DefConfig){
-    Serial.println("man - manual do equipamento"); 
-    Serial.println("status - status do equipamento");  
-    Serial.println("normal - estado normal do equipamento");     
+    Serial.println("man - man page"); 
+    Serial.println("status - status of reader");  
+    Serial.println("normal - change use mode");  
+    Serial.println("set hexon - hexadecimal enabled");  
+    Serial.println("set hexoff -  hexadecimal not enabled");  
+    Serial.println("set debugon - debug enabled");  
+    Serial.println("set debugoff - debug not enabled");     
+    Serial.println("set echoon - echo enabled in serial");  
+    Serial.println("set echooff - echo not enabled in serial");     
+    Serial.println("set serialon - return rfid in serial enabled");  
+    Serial.println("set serialoff - return rfid in serial not enabled");      
+    Serial.println("set keyon - return rfid in keyboard enabled");  
+    Serial.println("set keyoff - return rfid in keyboard not enabled");    
+       
   }
   if(nivel==DefNormal){
-    Serial.println("man - manual do equipamento"); 
-    Serial.println("status - status do equipamento");  
-    Serial.println("config - estado de comando de configuracao"); 
+    Serial.println("man - man page"); 
+    Serial.println("status - status of reader");  
+    Serial.println("config - change config mode"); 
   }
 }
 
@@ -150,20 +260,33 @@ void StatusSerial()
   
   Serial.println(" ");
   
-  Serial.println("Comando Status do Equipamento");
-  Serial.print("Equipamento no modo:");
+  Serial.println("Status reader");
+  Serial.print("Reader Mode:");
   Serial.println((nivel==DefNormal)?"Normal":"Config");
-  Serial.print( "Pino 4:"); 
-  byte value = digitalRead(buttonPin);
-  Serial.println(((value==LOW)?"On":"Off")); 
-   
+  Serial.print( "Hex mode:"); 
+  //byte value = digitalRead(buttonPin);
+  byte value = LerENDPARAMHEX();
+  Serial.println(((value!=LOW)?"On":"Off")); 
+  Serial.print( "DEBUG mode:"); 
+  debugmode = LerENDPARAMDEB();
+  Serial.println(((debugmode!=LOW)?"On":"Off"));    
+  Serial.print( "ECHO mode:"); 
+  echomode = LerENDPARAMECHO();
+  Serial.println(((echomode!=LOW)?"On":"Off"));    
+  Serial.print( "SERIAL mode rfid:"); 
+  serialmode = LerENDPARAMSERIAL();
+  Serial.println(((serialmode!=LOW)?"On":"Off"));      
+  Serial.print( "KEYBOARD mode rfid:"); 
+  serialmode = LerENDPARAMKEY();
+  Serial.println(((keymode!=LOW)?"On":"Off"));        
   Serial.println(" ");
+  
 }
 
 //Status da Serial
 void Status(byte Dev)
 {
-  if (Dev == DevSerial)
+  if(Dev==DevSerial)
   {
     StatusSerial(); 
   }
@@ -198,11 +321,13 @@ void le_rfid() {
   // Verify if the NUID has been readed
   if ( ! rfid.PICC_ReadCardSerial())
     return;
-
-  Serial.print(F("PICC type: "));
+  if(debugmode!=LOW){
+    Serial.print(F("PICC type: "));
+  } 
   MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-  Serial.println(rfid.PICC_GetTypeName(piccType));
-
+  if(debugmode!=LOW){
+    Serial.println(rfid.PICC_GetTypeName(piccType));
+  }
   // Check is the PICC of Classic MIFARE type
   if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
     piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
@@ -215,22 +340,39 @@ void le_rfid() {
     rfid.uid.uidByte[1] != nuidPICC[1] || 
     rfid.uid.uidByte[2] != nuidPICC[2] || 
     rfid.uid.uidByte[3] != nuidPICC[3] ) {
-    Serial.println(F("A new card has been detected."));
+    if(debugmode!=LOW){  
+      Serial.println(F("A new card has been detected."));
+    }
 
     // Store NUID into nuidPICC array
     for (byte i = 0; i < 4; i++) {
       nuidPICC[i] = rfid.uid.uidByte[i];
     }
-   
-    Serial.println(F("The NUID tag is:"));
-    Serial.print(F("In hex: "));
-    printHex(rfid.uid.uidByte, rfid.uid.size);
-    Serial.println();
-    Serial.print(F("In dec: "));
-    printDec(rfid.uid.uidByte, rfid.uid.size);
-    Serial.println();
+    if(debugmode!=LOW){
+      Serial.println(F("The NUID tag is:"));
+      Serial.print(F("In hex: "));
+    }
+    if(hexmode!=LOW){
+      printHex(rfid.uid.uidByte, rfid.uid.size);
+    }
+    if(debugmode!=LOW){
+      Serial.println();
+    }
+    if(serialmode!=LOW){
+      Serial.print(F("In dec: "));
+    }
+    if(hexmode==LOW){
+       printDec(rfid.uid.uidByte, rfid.uid.size);
+    }
+    if(debugmode!=LOW){
+      Serial.println();
+    }
   }
-  else Serial.println(F("Card read previously."));
+  else {
+    if(debugmode!=LOW){
+       Serial.println(F("Card read previously."));
+    }
+  }
 
   // Halt PICC
   rfid.PICC_HaltA();
@@ -240,11 +382,11 @@ void le_rfid() {
 }
 
 void Wellcome_Normal(){
-  Serial.println("Bem vindo ao modo normal");
+  Serial.println("Normal mode is actived");
 }
 
 void Wellcome_Config(){
-  Serial.println("Bem vindo ao modo config");
+  Serial.println("Config Mode is activade");
 }
 
 
@@ -270,7 +412,9 @@ void KeyCMD_Normal(byte Dev)
   
     if (strcmp( BufferKeypad,"status")==0)
     {
-      Serial.println("Status Comando...");
+      if(debugmode!=LOW){
+        Serial.println("Status command...");
+      }
       Status(Dev);
       resp = true;        
     }
@@ -285,7 +429,7 @@ void KeyCMD_Normal(byte Dev)
       if( Dev==DevSerial)
       {       
         //Serial.println(BufferKeypad);        
-        Serial.println("Comando nao reconhecido!"); 
+        Serial.println("Unknow command!"); 
         //strcpy(BufferKeypad,'\0');
         memset(BufferKeypad,0,sizeof(BufferKeypad));
       }      
@@ -307,8 +451,10 @@ void KeyCMD_Config(byte Dev)
 
   if(BufferKeypad[0] != '\0')
   {
-    Serial.print("Comando:");
-    Serial.println(BufferKeypad);
+    if(debugmode!=LOW){
+       Serial.print("Command:");
+       Serial.println(BufferKeypad);
+    }
    
     if (strcmp( BufferKeypad, "normal")==0)
     {
@@ -319,10 +465,116 @@ void KeyCMD_Config(byte Dev)
   
     if (strcmp( BufferKeypad,"status")==0)
     {
-      Serial.println("Status Comando...");
-      Status(Dev);
+      if(debugmode!=LOW){
+        Serial.println("Status command...");
+        Status(Dev);
+      }
       resp = true;        
     }
+
+    if (strcmp( BufferKeypad,"set hexon")==0)
+    {
+      if(debugmode!=LOW){
+         Serial.println("set hex on command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMHEX(HIGH);
+      resp = true;        
+    }
+
+    if (strcmp( BufferKeypad,"set hexoff")==0)
+    {
+      if(debugmode!=LOW){
+         Serial.println("set hex off command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMHEX(LOW);
+      resp = true;        
+    }    
+
+    if (strcmp( BufferKeypad,"set debugon")==0)
+    {
+      if(debugmode!=LOW){
+        Serial.println("set debug on command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMDEB(HIGH);
+      resp = true;        
+    }
+
+    if (strcmp( BufferKeypad,"set debugoff")==0)
+    {
+      if(debugmode!=LOW){
+         Serial.println("set debug off command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMDEB(LOW);
+      resp = true;        
+    }  
+
+    if (strcmp( BufferKeypad,"set echoon")==0)
+    {
+      if(debugmode!=LOW){
+        Serial.println("set echo on command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMECHO(HIGH);
+      resp = true;        
+    }
+
+    if (strcmp( BufferKeypad,"set echooff")==0)
+    {
+      if(debugmode!=LOW){
+         Serial.println("set echo off command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMECHO(LOW);
+      resp = true;        
+    }  
+
+    if (strcmp( BufferKeypad,"set serialon")==0)
+    {
+      if(debugmode!=LOW){
+        Serial.println("set serialmode on command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMSERIAL(HIGH);
+      resp = true;        
+    }
+
+    if (strcmp( BufferKeypad,"set serialoff")==0)
+    {
+      if(debugmode!=LOW){
+         Serial.println("set serialmode off command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMSERIAL(LOW);
+      resp = true;        
+    }      
+
+    if (strcmp( BufferKeypad,"set keyon")==0)
+    {
+      if(debugmode!=LOW){
+        Serial.println("set keymode on command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMKEY(HIGH);
+      Serial.println("Reseting RFID READER");
+      /*Força reset de maquina*/
+      resetFunc();  //call reset
+      resp = true;        
+    }
+
+    if (strcmp( BufferKeypad,"set keyoff")==0)
+    {
+      if(debugmode!=LOW){
+         Serial.println("set keymode off command...");
+      }
+      //Status(Dev);
+      GravarENDPARAMKEY(LOW);
+      resp = true;        
+    }     
+    
     if (strcmp( BufferKeypad,"man")==0)
     {    
       Man(Dev);
@@ -337,7 +589,7 @@ void KeyCMD_Config(byte Dev)
         
         //Serial.println(BufferKeypad);
         
-        Serial.println("Comando nao reconhecido!"); 
+        Serial.println("Unknow command!"); 
         //strcpy(BufferKeypad,'\0');
         memset(BufferKeypad,0,sizeof(BufferKeypad));
         
@@ -371,11 +623,16 @@ void Le_Serial()
   while(Serial.available()>0) 
   {
     key = Serial.read();
+    if (echomode!=LOW){ /*Echo ativo*/
+      Serial.print(key);
+    }
     if(key == '\r')
     {
       sprintf(BufferKeypad,"%s",BufferKeypad);
-      Serial.print("Comando digitado:");
-      Serial.println(BufferKeypad);
+      if(debugmode!=LOW){
+         Serial.print("Comando digitado:");
+         Serial.println(BufferKeypad);
+      }
       KeyCMD(DevSerial);      
       break;
     }
@@ -397,8 +654,6 @@ void Leituras()
  
 void loop() {
   Leituras();
-  
-  
 }
 
 
@@ -407,35 +662,49 @@ void loop() {
  */
 void printHex(byte *buffer, byte bufferSize) {
   char hex[] = "0123456789abcdef";
+  if (serialmode!=LOW){
+    Serial.print("RFID:");
+  }
   for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], HEX);
+    if(serialmode!=LOW){
+       Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+       Serial.print(buffer[i], HEX);
+    }
     /*Ativa se o botão não for pressionado*/
-    if(buttonState != LOW) { 
+    if(keymode != LOW) { 
         Keyboard.print(buffer[i], HEX);
     }
   }
-  Serial.println(" ");
-  Keyboard.write(0x10);
-  Keyboard.write(0x13);
+  if(debugmode!=LOW){
+    Serial.println(" ");
+  }
+  if(keymode != LOW) { 
+    Keyboard.write(0x10);
+    Keyboard.write(0x13);
+  }
   
 }
 
 long long int strtoll(char *info, char *pos, int base){
   long long int value = 0;
   int cont = 0;
-  Serial.println("Iniciou");
+  if(debugmode!=LOW){
+    Serial.println("Iniciou");
+  }
   char info2[10];
   
   info2[0] = *info; /*Pega primeiro caracter*/
   
   while(info2[0] != '\0'){
-
-    Serial.print("info2:");
-    Serial.println(info2[0]);
+    if(debugmode!=LOW){
+      Serial.print("info2:");
+      Serial.println(info2[0]);
+    }
     value = value * base;
-    Serial.print("value:");
-    Serial.println( (char)strtol(info2[0], NULL, base));
+    if(debugmode!=LOW){    
+      Serial.print("value:");
+      Serial.println( (char)strtol(info2[0], NULL, base));
+    }
     value = value + strtol(info2[0], NULL, base);
     cont ++;
     //memcpy(info2,'\0',sizeof(info2));
@@ -503,9 +772,10 @@ unsigned  long int getNumber(byte *info, byte tamanho){
     //Serial.print("Parte:");
     //Serial.println( (unsigned short int)(parte&0xFF));
   }
-  Serial.print("final:");
-  //Serial.println(acumulador);
-  
+  if(debugmode!=LOW){
+    Serial.print("final:");
+    //Serial.println(acumulador);
+  }
   //memcpy(acumulador,info,tamanho);
   //acumulador = ((*info)<<24)+((*(info+1))<<16)+((*(info+2))<<8)+((*(info+3)));
   //acumulador = (long long int) info;
@@ -519,21 +789,26 @@ void CharLongLongInt(char *info, unsigned  long int numero){
   tempo = numero;
   char infoaux[20];
   
-
-  Serial.println("Partes");
+  if(debugmode!=LOW){
+    Serial.println("Partes");
+  }
   do {
     memset(infoaux,'\0',sizeof(infoaux));    
     memcpy(infoaux,info,sizeof(infoaux));
     resto = tempo % 10;
-    Serial.print("Antes:");
-    Serial.println(infoaux);
+    if(debugmode!=LOW){
+      Serial.print("Antes:");
+      Serial.println(infoaux);
+    }
     sprintf(info,"%d%s\0",resto,infoaux);
     tempo = tempo-resto;
     tempo = tempo/10;    
-    Serial.print("Resto:"); 
-    Serial.println(resto);
-    Serial.print("Info:");
-    Serial.println(info);
+    if(debugmode!=LOW){    
+      Serial.print("Resto:"); 
+      Serial.println(resto);
+      Serial.print("Info:");
+      Serial.println(info);
+    }
   } while(tempo !=0);  
   //sprintf(info,"%s",infoaux);
 }
@@ -544,7 +819,7 @@ void CharLongLongInt(char *info, unsigned  long int numero){
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX);
     /*Ativa se o botão não for pressionado* /
-    if(buttonState != LOW) { 
+    if(hexmode != LOW) { 
         Keyboard.print(buffer[i], HEX);
     }
   }
@@ -570,24 +845,29 @@ void printDec(byte *buffer, byte bufferSize) {
   
   
   if (number!=0){
-    Serial.println("Diferente de zero");
+    if(debugmode!=LOW){    
+      Serial.println("Diferente de zero");
+    }
   }
-  //Serial.print("Numero:");
+  
   char info[20];
   memset(info,'\0',sizeof(info));
   sprintf(info,"%lu",number);
   //CharLongLongInt(info,number);
-  Serial.print("Nro:");
-  Serial.println(info);
+  if(serialmode!=LOW){   
+      Serial.print("RFID:");
+       Serial.println(info);
+  }
       
   /*Ativa se o botão não for pressionado*/
-  if(buttonState == LOW) {
-    
-      //Keyboard.print(number,DEC);
+  if(keymode != LOW) {    
+    //Keyboard.print(number,DEC);
     Keyboard.print(info);
     Keyboard.write(0x10);
     Keyboard.write(0x13);
   }
-  Serial.println("Finalizou");
+  if(debugmode!=LOW){
+    Serial.println("Finalizou");
+  }
   //delay(2000);
 }
