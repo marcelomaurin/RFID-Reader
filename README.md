@@ -1,6 +1,6 @@
 # RFID-Reader
 
-#English
+# English
 RFID reader
 
 This reader allows reading any Mifare 13.56MHZ reader. Simulating typing your UID in Hex or Decimal.
@@ -26,7 +26,8 @@ PIN4(GND)             -
 
 <img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
 
-#Spanish
+# Spanish
+
 Lector RFID
 
 Este lector permite leer cualquier lector Mifare 13.56MHZ. Simulando escribir su UID en HEX o Decimal.
@@ -53,7 +54,7 @@ pin10                RST
 <img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
 
 
-Portuguese:
+# Portuguese:
 Leitor RFID 
 
 Este leitor permite ler qualquer leitor Mifare 13,56MHZ. Simulando a digitação do seu UID em Hex ou Decimal.
@@ -81,7 +82,7 @@ pin10                RST
 <img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
 
 
-#Deutsch
+# Deutsch
 RFID-Lesegerät
 
 Dieses Lesegerät ermöglicht das Lesen aller Mifare 13,56-MHz-Lesegeräte. Simulation der Eingabe Ihrer UID in Hex oder Dezimal.
@@ -107,7 +108,7 @@ PIN4(GND)             -
 
 <img src="https://github.com/marcelomaurin/RFID-Reader/blob/main/leitor.jpeg">
 
-#Spanish
+# Spanish
 Lector RFID
 
 Este lector permite leer cualquier lector Mifare 13.56MHZ. Simulando escribir su UID en HEX o Decimal.
